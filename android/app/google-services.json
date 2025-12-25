@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1055031428150",
+    "project_id": "lost-and-found-team",
+    "storage_bucket": "lost-and-found-team.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1055031428150:android:c251a78a416db0562d0497",
+        "android_client_info": {
+          "package_name": "com.app.lost_and_found"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDu30O4ZcjeGTmHWuRbEqkKLH-6zKBZh9c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

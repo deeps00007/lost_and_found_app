@@ -1,0 +1,57 @@
+name: lost_and_found_app
+description: A college lost and found application with chat support
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # Firebase
+  firebase_core: ^3.8.1
+  firebase_auth: ^5.3.3
+  cloud_firestore: ^5.5.0
+  firebase_messaging: ^15.1.5
+  
+  # Image handling
+  image_picker: ^1.1.2
+  flutter_image_compress: ^2.3.0
+  cached_network_image: ^3.4.1
+  permission_handler: ^11.3.1
+  
+  # ImageKit (for image storage)
+  dio: ^5.7.0
+  
+  # State management
+  provider: ^6.1.2
+  
+  # UI
+  intl: ^0.19.0
+  timeago: ^3.7.0
+  
+  # Chat UI
+  flutter_chat_ui: ^1.6.15
+  
+  # Other utilities
+  uuid: ^4.5.1
+  flutter_local_notifications: ^19.5.0
+  google_sign_in: ^6.2.2
+  google_fonts: ^6.1.0
+  http: ^1.6.0
+  googleapis_auth: ^2.0.0
+  geolocator: ^14.0.2
+  flutter_map: ^8.2.2
+  latlong2: ^0.9.1
+  flutter_map_marker_cluster: ^8.2.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  
+  assets:
+    - assets/images/lost&found.png
