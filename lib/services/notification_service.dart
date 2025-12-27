@@ -3,6 +3,9 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
+import 'dart:io';
 
 class NotificationService {
   static final FirebaseMessaging _firebaseMessaging =
@@ -94,9 +97,7 @@ class NotificationService {
 
     await _localNotifications.initialize(
       settings,
-      onDidReceiveNotificationResponse: (details) {
-        print('Notification tapped: ${details.payload}');
-      },
+      onDidReceiveNotificationResponse: _onNotificationResponse,
     );
 
     // Create notification channel for Android
@@ -105,6 +106,8 @@ class NotificationService {
       'High Importance Notifications',
       description: 'This channel is used for important notifications.',
       importance: Importance.high,
+      enableVibration: true,
+      playSound: true,
     );
 
     await _localNotifications
@@ -117,10 +120,6 @@ class NotificationService {
   static Future<void> _handleForegroundMessage(RemoteMessage message) async {
     print('Got a message whilst in the foreground!');
     print('Message data: ${message.data}');
-
-    if (message.notification != null) {
-      print('Message also contained a notification: ${message.notification}');
-    }
 
     // Suppress notification if user is already in this chat room
     final incomingChatId = message.data['chatId'];
@@ -135,38 +134,93 @@ class NotificationService {
 
   // Show local notification
   static Future<void> _showLocalNotification(RemoteMessage message) async {
-    const AndroidNotificationDetails androidDetails =
-        AndroidNotificationDetails(
+    // Get sender info from data payload
+    final String senderName = message.data['senderName'] ??
+        message.notification?.title ??
+        'New Message';
+    final String? senderImage = message.data['senderImage'];
+    final String content = message.notification?.body ??
+        message.data['body'] ??
+        'You have a new message';
+
+    // Download image if available for WhatsApp style
+    String? largeIconPath;
+    Person? sender;
+
+    if (senderImage != null && senderImage.isNotEmpty) {
+      largeIconPath = await _downloadFile(
+          senderImage, 'sender_profile_${message.hashCode}.jpg');
+    }
+
+    if (largeIconPath != null) {
+      sender = Person(
+        name: senderName,
+        key: message.data['senderId'] ?? 'sender',
+        icon: BitmapFilePathAndroidIcon(largeIconPath),
+      );
+    } else {
+      sender = Person(
+        name: senderName,
+        key: message.data['senderId'] ?? 'sender',
+      );
+    }
+
+    // Prepare MessagingStyle for WhatsApp-like grouping and appearance
+    final messagingStyle = MessagingStyleInformation(
+      sender,
+      groupConversation: false,
+      messages: [
+        Message(
+          content,
+          DateTime.now(),
+          sender,
+        ),
+      ],
+    );
+
+    final androidPlatformChannelSpecifics = AndroidNotificationDetails(
       'high_importance_channel',
       'High Importance Notifications',
       channelDescription: 'This channel is used for important notifications.',
       importance: Importance.high,
       priority: Priority.high,
       icon: '@drawable/ic_notification',
+      styleInformation: messagingStyle,
     );
 
-    const NotificationDetails notificationDetails = NotificationDetails(
-      android: androidDetails,
+    final NotificationDetails platformChannelSpecifics = NotificationDetails(
+      android: androidPlatformChannelSpecifics,
     );
-
-    // Extract title and body from notification payload OR data payload
-    String title =
-        message.notification?.title ?? message.data['title'] ?? 'New Message';
-    String body = message.notification?.body ?? message.data['body'] ?? '';
-
-    // If body is empty, it might be a specific type of data message, e.g., chat
-    if (body.isEmpty && message.data['type'] == 'chat') {
-      // We could customize this based on message.data['senderName'] etc.
-      body = 'You have a new message';
-    }
 
     await _localNotifications.show(
       message.hashCode,
-      title,
-      body,
-      notificationDetails,
+      senderName,
+      content,
+      platformChannelSpecifics,
       payload: message.data.toString(),
     );
+  }
+
+  // Handle notification tap
+  static void _onNotificationResponse(NotificationResponse details) {
+    print('Notification tapped payload: ${details.payload}');
+  }
+
+  // Helper to download image for notifications
+
+  // Helper to download image for notifications
+  static Future<String?> _downloadFile(String url, String fileName) async {
+    try {
+      final Directory directory = await getTemporaryDirectory();
+      final String filePath = p.join(directory.path, fileName);
+      final http.Response response = await http.get(Uri.parse(url));
+      final File file = File(filePath);
+      await file.writeAsBytes(response.bodyBytes);
+      return filePath;
+    } catch (e) {
+      print('Error downloading notification icon: $e');
+      return null;
+    }
   }
 
   // Handle notification tap
@@ -181,6 +235,9 @@ class NotificationService {
     required String title,
     required String body,
     required String chatId,
+    String? senderName,
+    String? senderImage,
+    String? senderId,
   }) async {
     const String apiUrl =
         'https://fcm-php-api.onrender.com/send_notification.php';
@@ -195,6 +252,10 @@ class NotificationService {
           'title': title,
           'body': body,
           'chat_id': chatId,
+          'senderName': senderName ?? '',
+          'senderImage': senderImage ?? '',
+          'senderId': senderId ?? '',
+          'type': 'chat',
         },
       );
 

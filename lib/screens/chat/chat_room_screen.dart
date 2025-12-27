@@ -37,6 +37,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   String? _otherUserImage;
   String? _otherUserFcmToken;
   String? _currentUserName;
+  String? _currentUserImage;
 
   @override
   void initState() {
@@ -53,6 +54,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
       if (userDoc.exists) {
         setState(() {
           _currentUserName = userDoc.data()?['name'] ?? 'Someone';
+          _currentUserImage = userDoc.data()?['profilePicUrl'];
         });
       }
     } catch (e) {
@@ -201,6 +203,9 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
             body:
                 '${_currentUserName ?? "Someone"} is interested in "${widget.contextItem!.title}"',
             chatId: _chatId!,
+            senderName: _currentUserName,
+            senderImage: _currentUserImage,
+            senderId: currentUserId,
           );
         }
       }
@@ -289,6 +294,9 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
           title: _currentUserName ?? 'New Message',
           body: messageText,
           chatId: _chatId!,
+          senderName: _currentUserName,
+          senderImage: _currentUserImage,
+          senderId: currentUserId,
         );
       }
 
