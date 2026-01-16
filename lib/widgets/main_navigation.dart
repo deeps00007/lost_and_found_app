@@ -95,13 +95,9 @@ class _MainNavigationState extends State<MainNavigation> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: Offset(0, -5),
-          ),
-        ],
+        border: Border(
+          top: BorderSide(color: Colors.grey.shade100, width: 1),
+        ),
       ),
       child: SafeArea(
         child: Container(
@@ -118,6 +114,7 @@ class _MainNavigationState extends State<MainNavigation> {
                   return Badge(
                     label: Text('$count'),
                     isLabelVisible: count > 0,
+                    offset: Offset(5, -5),
                     child: _buildNavBarItem(1, Icons.chat_bubble_rounded,
                         Icons.chat_bubble_outline, 'Chats'),
                   );
@@ -140,19 +137,21 @@ class _MainNavigationState extends State<MainNavigation> {
     return GestureDetector(
       onTap: () => setState(() => _currentIndex = index),
       behavior: HitTestBehavior.opaque,
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 250),
+        curve: Curves.easeOutCubic,
+        padding: EdgeInsets.symmetric(
+            horizontal: isSelected ? 20 : 12, vertical: 10),
         decoration: BoxDecoration(
-          color:
-              isSelected ? primaryColor.withOpacity(0.08) : Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
+          color: isSelected ? primaryColor : Colors.transparent,
+          borderRadius: BorderRadius.circular(24),
         ),
         child: Row(
           children: [
             Icon(
               isSelected ? selectedIcon : unselectedIcon,
-              color: isSelected ? primaryColor : Colors.grey[500],
-              size: 26,
+              color: isSelected ? Colors.white : Colors.grey[400],
+              size: 24,
             ),
             AnimatedSize(
               duration: Duration(milliseconds: 200),
@@ -165,8 +164,8 @@ class _MainNavigationState extends State<MainNavigation> {
               Text(
                 label,
                 style: TextStyle(
-                  color: primaryColor,
-                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
                   fontSize: 14,
                 ),
               ),

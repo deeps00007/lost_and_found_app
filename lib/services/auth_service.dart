@@ -1,6 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user_model.dart';
+import 'package:geolocator/geolocator.dart';
+import 'notification_service.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -40,6 +42,12 @@ class AuthService {
             .set(userModel.toMap());
         await user.updateDisplayName(name);
 
+        // Capture initial location
+        await _updateUserLocation(user.uid);
+
+        // Save FCM token for new user
+        await NotificationService.saveTokenToCurrentUser();
+
         return null; // Success
       }
     } on FirebaseAuthException catch (e) {
@@ -65,6 +73,14 @@ class AuthService {
         email: email,
         password: password,
       );
+
+      // Update location on sign in
+      if (_auth.currentUser != null) {
+        await _updateUserLocation(_auth.currentUser!.uid);
+        // Save FCM token
+        await NotificationService.saveTokenToCurrentUser();
+      }
+
       return null; // Success
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
@@ -115,5 +131,30 @@ class AuthService {
       }
       return null;
     });
+  }
+
+  // Update user location
+  Future<void> _updateUserLocation(String uid) async {
+    try {
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) return;
+      }
+
+      if (permission == LocationPermission.deniedForever) return;
+
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      await _firestore.collection('users').doc(uid).update({
+        'latitude': position.latitude,
+        'longitude': position.longitude,
+        'lastLocationUpdate': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      print('Error updating user location: $e');
+    }
   }
 }

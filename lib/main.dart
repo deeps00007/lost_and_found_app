@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // Added
 import 'config/theme.dart';
 import 'providers/auth_provider.dart';
 import 'screens/auth/login_screen.dart';
+import 'screens/onboarding_screen.dart'; // Added
 import 'widgets/main_navigation.dart'; // Changed import
 import 'services/auth_service.dart';
 import 'utils/permissions.dart';
@@ -19,10 +21,26 @@ void main() async {
   // Initialize notifications
   await NotificationService.initialize();
 
-  runApp(MyApp());
+  // Check if onboarding is seen
+  bool showOnboarding = true;
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    showOnboarding = !(prefs.getBool('seenOnboarding') ?? false);
+  } catch (e) {
+    print(
+        "⚠️ Error initializing SharedPreferences (likely missing native plugin): $e");
+    // Fallback to skipping onboarding to ensure app starts
+    showOnboarding = false;
+  }
+
+  runApp(MyApp(showOnboarding: showOnboarding));
 }
 
 class MyApp extends StatelessWidget {
+  final bool showOnboarding;
+
+  const MyApp({Key? key, required this.showOnboarding}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
@@ -33,7 +51,7 @@ class MyApp extends StatelessWidget {
         title: 'Lost & Found',
         theme: AppTheme.lightTheme,
         debugShowCheckedModeBanner: false,
-        home: AuthWrapper(),
+        home: showOnboarding ? OnboardingScreen() : AuthWrapper(),
       ),
     );
   }

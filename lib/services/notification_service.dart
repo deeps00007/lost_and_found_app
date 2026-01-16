@@ -67,6 +67,14 @@ class NotificationService {
     }
   }
 
+  // Public method to be called after login/signup
+  static Future<void> saveTokenToCurrentUser() async {
+    String? token = await _firebaseMessaging.getToken();
+    if (token != null) {
+      await _saveFCMToken(token);
+    }
+  }
+
   // Save FCM token to user document
   static Future<void> _saveFCMToken(String token) async {
     try {
@@ -79,7 +87,9 @@ class NotificationService {
           'fcmToken': token,
           'updatedAt': FieldValue.serverTimestamp(),
         });
-        print('FCM token saved to Firestore');
+        print('FCM token saved to Firestore for user: $userId');
+      } else {
+        print('Skipping FCM save: No logged in user');
       }
     } catch (e) {
       print('Error saving FCM token: $e');

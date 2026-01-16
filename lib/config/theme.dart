@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 class AppTheme {
   // Color Palette
   static const Color primaryColor = Color(0xFF2C5F6F); // Deep Teal
-  static const Color secondaryColor = Color(0xFFFF8C7A); // Soft Coral
+  static const Color secondaryColor = Color.fromARGB(255, 218, 110, 93); // Soft Coral
   static const Color backgroundColor = Color(0xFFF5F8FA); // Pale Blue-Grey
   static const Color surfaceColor = Colors.white;
   static const Color errorColor = Color(0xFFD32F2F);
